@@ -49,5 +49,5 @@ public class Project {
     // User와의 연관관계 (N : 1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User userId;
+    private User user;
 }

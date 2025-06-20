@@ -52,6 +52,6 @@ public class KanbanColumn {
     private LocalDateTime updatedAt;
 
     // Card 연관관계 (1 : N)
-    @OneToMany(mappedBy = "KanbanColumn", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "kanbanColumn", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Card> cards = new ArrayList<>();
 }
