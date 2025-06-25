@@ -50,4 +50,12 @@ public class Project {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    // 사용자 정의 생성
+    public Project(String title, String description, String category, User user) {
+        this.title = title;
+        this.description = description;
+        this.category = category;
+        this.user = user;
+    }
 }

@@ -7,6 +7,7 @@ import gon.til.entity.User;
 import gon.til.repository.UserRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ public class UserRepositoryTest {
     private UserRepository userRepository;
 
     @Test
+    @Order(1)
     @DisplayName("사용자 저장 및 조회 테스트")
     void Test1() {
         // Given
@@ -30,5 +32,26 @@ public class UserRepositoryTest {
         // Then
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get().getUsername()).isEqualTo("testuser");
+    }
+
+    @Test
+    @DisplayName("이메일로 사용자 조회 테스트")
+    void Test2() {
+
+        // When
+        Optional<User> found = userRepository.findByEmail("test@test.com");
+        Optional<User> notFound = userRepository.findByEmail("notexist@test.com");
+
+        // Then
+        assertThat(found).isPresent();
+        assertThat(notFound).isEmpty();
+    }
+
+    @Test
+    @DisplayName("이메일 중복 체크 테스트")
+    void Test3() {
+        // When & Then
+        assertThat(userRepository.existsByEmail("test@test.com")).isTrue();
+        assertThat(userRepository.existsByEmail("notexist@test.com")).isFalse();
     }
 }
