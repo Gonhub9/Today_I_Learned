@@ -1,7 +1,7 @@
-package gon.til.repository;
+package gon.til.domain.repository;
 
-import gon.til.entity.Board;
-import gon.til.entity.Project;
+import gon.til.domain.entity.Board;
+import gon.til.domain.entity.Project;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

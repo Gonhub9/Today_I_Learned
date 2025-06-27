@@ -1,6 +1,6 @@
-package gon.til.repository;
+package gon.til.domain.repository;
 
-import gon.til.entity.User;
+import gon.til.domain.entity.User;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

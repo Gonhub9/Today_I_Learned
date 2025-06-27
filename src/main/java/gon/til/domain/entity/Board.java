@@ -1,4 +1,4 @@
-package gon.til.entity;
+package gon.til.domain.entity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

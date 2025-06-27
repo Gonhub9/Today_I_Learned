@@ -3,10 +3,10 @@ package gon.til.RepositoryTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import gon.til.TilApplication;
-import gon.til.entity.Project;
-import gon.til.entity.User;
-import gon.til.repository.ProjectRepository;
-import gon.til.repository.UserRepository;
+import gon.til.domain.entity.Project;
+import gon.til.domain.entity.User;
+import gon.til.domain.repository.ProjectRepository;
+import gon.til.domain.repository.UserRepository;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

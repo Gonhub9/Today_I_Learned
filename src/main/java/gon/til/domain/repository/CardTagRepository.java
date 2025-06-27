@@ -1,8 +1,8 @@
-package gon.til.repository;
+package gon.til.domain.repository;
 
-import gon.til.entity.Card;
-import gon.til.entity.CardTag;
-import gon.til.entity.Tag;
+import gon.til.domain.entity.Card;
+import gon.til.domain.entity.CardTag;
+import gon.til.domain.entity.Tag;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 

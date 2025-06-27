@@ -3,8 +3,8 @@ package gon.til.RepositoryTest;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import gon.til.TilApplication;
-import gon.til.entity.User;
-import gon.til.repository.UserRepository;
+import gon.til.domain.entity.User;
+import gon.til.domain.repository.UserRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;

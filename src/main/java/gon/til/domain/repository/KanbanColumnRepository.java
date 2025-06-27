@@ -1,7 +1,7 @@
-package gon.til.repository;
+package gon.til.domain.repository;
 
-import gon.til.entity.Board;
-import gon.til.entity.KanbanColumn;
+import gon.til.domain.entity.Board;
+import gon.til.domain.entity.KanbanColumn;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
