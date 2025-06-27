@@ -62,9 +62,20 @@ public class ProjectService {
         projectRepository.delete(project);
     }
 
-//    public Project updateProject() {
-//
-//    }
+    // 프로젝트 수정
+    public Project updateProject(Long projectId, Long userId, String title, String description, String category) {
+
+        Project project = projectRepository.findById(projectId)
+                        .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_PROJECT));
+
+        if (!project.getUser().getId().equals(userId)) {
+            throw new GlobalException(GlobalErrorCode.ACCESS_DENIED_PROJECT);
+        }
+
+        project.updateProject(title, description, category);
+
+        return projectRepository.save(project);
+    }
 
     // 프로젝트 검증
     private void validateProject(Long userId, String title) {

@@ -58,4 +58,11 @@ public class Project {
         this.category = category;
         this.user = user;
     }
+
+    // 프로젝트 수정
+    public void updateProject(String title, String description, String category) {
+        this.title = title;
+        this.description = description;
+        this.category = category;
+    }
 }
