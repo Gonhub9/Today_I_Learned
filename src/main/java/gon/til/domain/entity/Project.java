@@ -61,8 +61,8 @@ public class Project {
 
     // 프로젝트 수정
     public void updateProject(String title, String description, String category) {
-        this.title = title;
-        this.description = description;
-        this.category = category;
+        if (title != null) this.title = title;
+        if (description != null) this.description = description;
+        if (category != null) this.category = category;
     }
 }

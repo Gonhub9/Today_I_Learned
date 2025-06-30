@@ -36,6 +36,7 @@ public class BoardService {
         // 3. 보드 생성
         Board board = new Board(title, project);
         return boardRepository.save(board);
+
     }
 
     /**
@@ -47,12 +48,13 @@ public class BoardService {
 
         // 프로젝트 확인
         if (!projectRepository.existsById(projectId)) {
-            throw new GlobalException(GlobalErrorCode.NOT_FOUND_BOARD);
+            throw new GlobalException(GlobalErrorCode.NOT_FOUND_PROJECT);
         }
 
         // 보드 조회
         return boardRepository.findByProjectId(projectId)
                 .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_BOARD));
+
     }
 
     /**
@@ -60,13 +62,18 @@ public class BoardService {
      * - 보드 소유자인지 확인 (프로젝트 소유자 = 보드 소유자)
      */
     public Board updateBoardTitle(Long boardId, Long userId, String newTitle) {
-        // TODO: 보드 존재 확인
 
-        // TODO: 보드 소유권 확인 (프로젝트 소유자인지)
+        // 1. 보드 존재 확인
+        Board board = getBoardById(boardId);
 
-        // TODO: 제목 수정
+        // 2. 보드 소유권 확인 (보드 → 프로젝트 → 사용자)
+        validateBoardOwnership(board, userId);
 
-        return null; // 임시 반환
+        // 3. 제목 수정
+        board.updateBoard(newTitle);
+
+        return board;
+
     }
 
     /**
@@ -75,19 +82,16 @@ public class BoardService {
      * - 권한 확인 필요
      */
     public void deleteBoard(Long boardId, Long userId) {
-        // TODO: 보드 존재 확인
 
-        // TODO: 권한 확인
+        // 1. 보드 존재 확인
+        Board board = getBoardById(boardId);
 
-        // TODO: 보드 삭제 (연관된 컬럼, 카드도 cascade로 자동 삭제)
-    }
+        // 2. 보드 소유권 확인
+        validateBoardOwnership(board, userId);
 
-    /**
-     * 보드 존재 여부 확인
-     */
-    public boolean existsBoardByProject(Long projectId) {
-        // TODO: 구현
-        return false;
+        // 3. 보드 삭제 (연관된 컬럼, 카드도 cascade로 자동 삭제)
+        boardRepository.delete(board);
+
     }
 
     // ===== private 헬퍼 메서드들 =====
@@ -98,7 +102,6 @@ public class BoardService {
     private Project getProjectById(Long projectId) {
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_PROJECT));
-
     }
 
     /**
@@ -114,7 +117,12 @@ public class BoardService {
      * - 보드의 프로젝트 소유자와 userId 비교
      */
     private void validateBoardOwnership(Board board, Long userId) {
-        // TODO: 구현
+        // Board -> Project -> User 연관 관계
+        Long projectOwnerId = board.getProject().getUser().getId();
+
+        if (!projectOwnerId.equals(userId)) {
+            throw new GlobalException(GlobalErrorCode.ACCESS_DENIED_BOARD);
+        }
     }
 
     /**

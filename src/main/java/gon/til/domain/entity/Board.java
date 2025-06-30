@@ -57,4 +57,9 @@ public class Board {
         this.title = title;
         this.project = project;
     }
+
+    // 보드 수정
+    public void updateBoard(String title) {
+        if (title != null) this.title = title;
+    }
 }
