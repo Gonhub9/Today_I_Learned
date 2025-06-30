@@ -6,18 +6,24 @@ import gon.til.global.exception.GlobalErrorCode;
 import gon.til.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     // 유저 생성
     public User createUser(String username, String email, String password) {
         validateUser(username, email);
 
-        User user = new User(username, email, password);
+        User user = User.builder()
+                .username(username)
+                .email(email)
+                .password(password)
+                .build();
         return userRepository.save(user);
     }
 

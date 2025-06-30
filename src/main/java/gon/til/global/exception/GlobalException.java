@@ -16,8 +16,4 @@ public class GlobalException extends RuntimeException {
     public HttpStatus getStatus() {
         return globalErrorCode.getHttpStatus();
     }
-
-    public GlobalErrorCode getGlobalErrorCode() {
-        return globalErrorCode.getCode();
-    }
 }

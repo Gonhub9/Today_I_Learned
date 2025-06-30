@@ -60,6 +60,7 @@ public class ProjectService {
 
         // 3. 프로젝트 삭제
         projectRepository.delete(project);
+
     }
 
     // 프로젝트 수정
@@ -75,13 +76,14 @@ public class ProjectService {
         project.updateProject(title, description, category);
 
         return projectRepository.save(project);
+
     }
 
     // 프로젝트 검증
     private void validateProject(Long userId, String title) {
 
         // Project 이름 중복 검사
-        if (projectRepository.existsByUserAndTitle(userId, title)) {
+        if (projectRepository.existsByUserIdAndTitle(userId, title)) {
             throw new GlobalException(GlobalErrorCode.DUPLICATE_PROJECT_TITLE);
         }
     }
