@@ -26,9 +26,10 @@ public enum GlobalErrorCode {
     ACCESS_DENIED_BOARD(HttpStatus.FORBIDDEN, 403, "보드 접근 권한이 없습니다."),
 
     // 칸반칼럼 오류코드
-    DUPLICATE_COLUMN(HttpStatus.CONFLICT, 409, "이미 칼럼이 존재합니다."),
-    NOT_FOUND_COLUMN(HttpStatus.NOT_FOUND, 404, "칼럼이 존재하지 않습니다."),
-    ACCESS_DENIED_COLUMN(HttpStatus.FORBIDDEN, 403, "칼럼 접근 권한이 없습니다.");
+    DUPLICATE_COLUMN(HttpStatus.CONFLICT, 409, "이미 컬럼이 존재합니다."),
+    DUPLICATE_COLUMN_TITLE(HttpStatus.CONFLICT, 409, "이미 같은 제목의 컬럼이 존재합니다."),
+    NOT_FOUND_COLUMN(HttpStatus.NOT_FOUND, 404, "컬럼이 존재하지 않습니다."),
+    ACCESS_DENIED_COLUMN(HttpStatus.FORBIDDEN, 403, "컬럼 접근 권한이 없습니다.");
 
     private final HttpStatus httpStatus;
     private final int code;

@@ -14,6 +14,7 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -25,6 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Project {
 

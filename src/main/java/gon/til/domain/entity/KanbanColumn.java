@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -26,6 +27,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Table(name = "columns")
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
@@ -54,4 +56,14 @@ public class KanbanColumn {
     // Card 연관관계 (1 : N)
     @OneToMany(mappedBy = "kanbanColumn", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Card> cards = new ArrayList<>();
+
+    // 칼럼 수정
+    public void updateColumn(String title) {
+        if (title != null) this.title = title;
+    }
+
+    // 포지션 수정
+    public void updatePosition(Integer position) {
+        if (position != null) this.position = position;
+    }
 }
