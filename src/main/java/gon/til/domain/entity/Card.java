@@ -15,10 +15,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -30,6 +31,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Card {
 
@@ -53,12 +55,40 @@ public class Card {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     // KanbanColumn 연관관계 (N : 1)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "kanban_column_id")
     private KanbanColumn kanbanColumn;
 
     // Tag 연관관계 (N : M) - 중간 테이블을 통해
+    @Builder.Default
     @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CardTag> cardTags = new ArrayList<>();
+    private Set<CardTag> cardTags = new HashSet<>();
+
+    // 태그 추가
+    public void addTag(Tag tag) {
+        CardTag cardTag = new CardTag(this, tag);
+        this.cardTags.add(cardTag);
+    }
+
+    // 태그 삭제
+    public void removeTag(Long tagId) {
+        this.cardTags.removeIf(cardTag -> cardTag.getTag().getId().equals(tagId));
+    }
+
+    // 카드 수정
+    public void updateCard(String title, String content) {
+        if (title != null) this.title = title;
+        if (content != null) this.content = content;
+    }
+
+    // 포지션 수정
+    public void updatePosition(KanbanColumn column, Integer position) {
+        if (position != null) this.position = position;
+        if (kanbanColumn != null) this.kanbanColumn = column;
+    }
 }

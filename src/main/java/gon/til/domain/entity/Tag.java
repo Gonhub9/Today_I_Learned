@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -25,6 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Table(name = "tags")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 @EntityListeners(AuditingEntityListener.class)  // 자동 시간 관리
 public class Tag {
 
@@ -42,6 +44,7 @@ public class Tag {
     private LocalDateTime createdAt;
 
     // CardTag 연관관계 (1 : N)
+    @Builder.Default
     @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CardTag> cardTags = new ArrayList<>();
 }

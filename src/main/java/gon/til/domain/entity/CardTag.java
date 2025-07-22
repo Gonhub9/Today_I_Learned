@@ -34,4 +34,10 @@ public class CardTag {
     @MapsId("tagId")
     @JoinColumn(name = "tag_id")
     private Tag tag;
+
+    public CardTag(Card card, Tag tag) {
+        this.card = card;
+        this.tag = tag;
+        this.id = new CardTagId(card.getId(), tag.getId());
+    }
 }

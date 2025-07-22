@@ -29,7 +29,15 @@ public enum GlobalErrorCode {
     DUPLICATE_COLUMN(HttpStatus.CONFLICT, 409, "이미 컬럼이 존재합니다."),
     DUPLICATE_COLUMN_TITLE(HttpStatus.CONFLICT, 409, "이미 같은 제목의 컬럼이 존재합니다."),
     NOT_FOUND_COLUMN(HttpStatus.NOT_FOUND, 404, "컬럼이 존재하지 않습니다."),
-    ACCESS_DENIED_COLUMN(HttpStatus.FORBIDDEN, 403, "컬럼 접근 권한이 없습니다.");
+    ACCESS_DENIED_COLUMN(HttpStatus.FORBIDDEN, 403, "컬럼 접근 권한이 없습니다."),
+
+    // 카드 오류코드
+    DUPLICATE_CARD(HttpStatus.CONFLICT, 409, "이미 카드가 존재합니다."),
+    NOT_FOUND_CARD(HttpStatus.NOT_FOUND, 404, "카드가 존재하지 않습니다."),
+    ACCESS_DENIED_CARD(HttpStatus.FORBIDDEN, 403, "카드 접근 권한이 없습니다."),
+
+    // 태그 오류코드
+    NOT_FOUND_TAG(HttpStatus.NOT_FOUND, 404, "태그가 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final int code;
