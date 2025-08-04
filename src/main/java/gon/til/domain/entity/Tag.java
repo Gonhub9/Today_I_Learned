@@ -1,5 +1,6 @@
 package gon.til.domain.entity;
 
+import gon.til.domain.common.TagColor;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,4 +48,11 @@ public class Tag {
     @Builder.Default
     @OneToMany(mappedBy = "tag", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CardTag> cardTags = new ArrayList<>();
+
+    // 프로젝트 수정
+    public void updateTag(String name, String color) {
+        TagColor tagColor = TagColor.from(color.toUpperCase());
+        this.name = name;
+        this.color = tagColor.getHexCode();
+    }
 }

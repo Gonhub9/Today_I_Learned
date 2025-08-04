@@ -69,6 +69,10 @@ public class Card {
     @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CardTag> cardTags = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id")
+    private Project project;
+
     // 태그 추가
     public void addTag(Tag tag) {
         CardTag cardTag = new CardTag(this, tag);
