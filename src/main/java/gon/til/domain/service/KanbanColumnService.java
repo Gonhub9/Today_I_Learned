@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-@Transactional // 클래스 레벨에 트랜잭션을 적용하여 모든 public 메서드가 하나의 트랜잭션으로 실행되도록 합니다.
+@Transactional(readOnly = true) // 클래스 레벨에 트랜잭션을 적용하여 모든 public 메서드가 하나의 트랜잭션으로 실행되도록 합니다.
 public class KanbanColumnService {
 
     private final KanbanColumnRepository kanbanColumnRepository;
@@ -174,6 +174,7 @@ public class KanbanColumnService {
      *
      * @param board 기본 컬럼을 생성할 보드 엔티티
      */
+    @Transactional
     public void createDefaultColumns(Board board) {
         // createColumn 메서드를 재사용하여 4개의 기본 컬럼을 생성합니다.
         createColumn(board.getId(), board.getProject().getUser().getId(), "할 일");

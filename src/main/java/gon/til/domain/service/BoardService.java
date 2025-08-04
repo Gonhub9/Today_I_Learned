@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class BoardService {
 
     private final BoardRepository boardRepository;
@@ -81,6 +81,7 @@ public class BoardService {
      * - 프로젝트 삭제 시 자동으로 삭제되므로 직접 삭제는 제한적
      * - 권한 확인 필요
      */
+    @Transactional
     public void deleteBoard(Long boardId, Long userId) {
 
         // 1. 보드 존재 확인

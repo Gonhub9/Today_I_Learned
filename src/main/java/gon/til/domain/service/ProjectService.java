@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
@@ -64,6 +64,7 @@ public class ProjectService {
     }
 
     // 프로젝트 수정
+    @Transactional
     public Project updateProject(Long projectId, Long userId, String title, String description, String category) {
 
         Project project = projectRepository.findById(projectId)

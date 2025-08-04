@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class CardService {
 
     private final CardRepository cardRepository;
@@ -102,6 +102,7 @@ public class CardService {
     }
 
     // TODO: 카드에 태그 삭제
+    @Transactional
     public void removeTagFromCard(Long cardId, Long tagId) {
         Card card = getCardById(cardId);
 

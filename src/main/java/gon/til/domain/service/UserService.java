@@ -10,12 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
 
     // 유저 생성
+    @Transactional
     public User createUser(String username, String email, String password) {
         validateUser(username, email);
 
