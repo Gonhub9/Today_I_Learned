@@ -2,19 +2,16 @@ package gon.til.domain.repository;
 
 import gon.til.domain.entity.Tag;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 public interface TagRepository extends JpaRepository<Tag, Long> {
-    Optional<Tag> findByName(String name);
-    List<Tag> findByNameContaining(String keyword);
-    boolean existsByName(String name);
 
-    @Query("SELECT DISTINCT t FROM Tag t JOIN t.cardTags ct JOIN ct.card c WHERE c.project.id = :projectId")
-    List<Tag> findByProjectId(@Param("projectId") Long projectId);
+    // Project ID로 모든 태그 조회
+    List<Tag> findByProjectId(Long projectId);
 
-    @Query("SELECT DISTINCT t FROM Tag t JOIN t.cardTags ct WHERE ct.card.id = :cardId")
-    List<Tag> findByCardId(@Param("cardId") Long cardId);
+    // Project ID와 태그 이름으로 존재 여부 확인 (생성 시 중복 검사)
+    boolean existsByProjectIdAndName(Long projectId, String name);
+
+    // Project ID, 태그 이름, 제외할 태그 ID로 존재 여부 확인 (수정 시 중복 검사)
+    boolean existsByProjectIdAndNameAndIdNot(Long projectId, String name, Long id);
 }

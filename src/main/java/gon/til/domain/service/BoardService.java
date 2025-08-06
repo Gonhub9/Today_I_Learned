@@ -1,5 +1,7 @@
 package gon.til.domain.service;
 
+import gon.til.domain.dto.board.BoardCreateRequest;
+import gon.til.domain.dto.board.BoardUpdateRequest;
 import gon.til.domain.entity.Board;
 import gon.til.domain.entity.Project;
 import gon.til.domain.repository.BoardRepository;
@@ -10,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -19,13 +19,16 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final ProjectRepository projectRepository;
+    private final KanbanColumnService kanbanColumnService;
 
     /**
      * 프로젝트에 대한 보드 생성
      * - 프로젝트당 1개의 보드만 생성 가능
      * - 이미 보드가 있으면 예외 발생
+     * - 보드 생성 시 기본 컬럼(할 일, 진행 중, 완료, 복습 필요) 자동 생성
      */
-    public Board createBoard(Long projectId, String title) {
+    @Transactional
+    public Board createBoard(Long projectId, BoardCreateRequest request) {
 
         // 1. 프로젝트가 있는지 확인 및 조회
         Project project = getProjectById(projectId);
@@ -34,9 +37,13 @@ public class BoardService {
         validateDuplicateBoard(projectId);
 
         // 3. 보드 생성
-        Board board = new Board(title, project);
-        return boardRepository.save(board);
+        Board board = new Board(request.getTitle(), project);
+        Board savedBoard = boardRepository.save(board);
 
+        // 4. 기본 컬럼 생성
+        kanbanColumnService.createDefaultColumns(savedBoard);
+
+        return savedBoard;
     }
 
     /**
@@ -61,7 +68,8 @@ public class BoardService {
      * 보드 제목 수정
      * - 보드 소유자인지 확인 (프로젝트 소유자 = 보드 소유자)
      */
-    public Board updateBoardTitle(Long boardId, Long userId, String newTitle) {
+    @Transactional
+    public Board updateBoardTitle(Long boardId, Long userId, BoardUpdateRequest request) {
 
         // 1. 보드 존재 확인
         Board board = getBoardById(boardId);
@@ -70,7 +78,7 @@ public class BoardService {
         validateBoardOwnership(board, userId);
 
         // 3. 제목 수정
-        board.updateBoard(newTitle);
+        board.updateBoard(request.getTitle());
 
         return board;
 

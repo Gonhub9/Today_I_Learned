@@ -1,5 +1,7 @@
 package gon.til.domain.service;
 
+import gon.til.domain.dto.project.ProjectCreateRequest;
+import gon.til.domain.dto.project.ProjectUpdateRequest;
 import gon.til.domain.entity.Project;
 import gon.til.domain.entity.User;
 import gon.til.domain.repository.ProjectRepository;
@@ -20,16 +22,16 @@ public class ProjectService {
     private final UserRepository userRepository;
 
     // 프로젝트 생성
-    public Project createProject(Long userId, String title, String description, String category) {
+    public Project createProject(Long userId, ProjectCreateRequest request) {
 
         // 1. 프로젝트 이름 검증
-        validateProject(userId, title);
+        validateProject(userId, request.getTitle());
 
         // 2. 불필요한 User 조회 방지
         User user = userRepository.getReferenceById(userId);
 
         // 3. 프로젝트 생성
-        Project project = new Project(title, description, category, user);
+        Project project = new Project(request.getTitle(), request.getDescription(), request.getCategory(), user);
         return projectRepository.save(project);
 
     }
@@ -65,7 +67,7 @@ public class ProjectService {
 
     // 프로젝트 수정
     @Transactional
-    public Project updateProject(Long projectId, Long userId, String title, String description, String category) {
+    public Project updateProject(Long projectId, Long userId, ProjectUpdateRequest request) {
 
         Project project = projectRepository.findById(projectId)
                         .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_PROJECT));
@@ -74,7 +76,7 @@ public class ProjectService {
             throw new GlobalException(GlobalErrorCode.ACCESS_DENIED_PROJECT);
         }
 
-        project.updateProject(title, description, category);
+        project.updateProject(request.getTitle(), request.getDescription(), request.getCategory());
 
         return projectRepository.save(project);
 

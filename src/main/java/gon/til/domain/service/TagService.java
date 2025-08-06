@@ -23,11 +23,10 @@ public class TagService {
     private final ProjectRepository projectRepository;
 
     @Transactional
-    public Tag createTag(Long projectId, TagCreateRequest request) {
-
+    public Tag createTag(Long projectId, Long userId, TagCreateRequest request) {
         Project project = getProjectById(projectId);
-
-        validateProject(project.getUser().getId(), project.getTitle());
+        validateProjectOwnership(project, userId);
+        validateDuplicateTagName(projectId, request.getName());
 
         if (!TagColor.isValidColor(request.getColor())) {
             throw new GlobalException(GlobalErrorCode.INVALID_COLOR_NAME);
@@ -36,6 +35,7 @@ public class TagService {
         TagColor tagColor = TagColor.from(request.getColor().toUpperCase());
 
         Tag tag = Tag.builder()
+                .project(project) // 프로젝트 연관관계 설정
                 .name(request.getName())
                 .color(tagColor.getHexCode())
                 .build();
@@ -43,51 +43,35 @@ public class TagService {
         return tagRepository.save(tag);
     }
 
-    // TODO : 프로젝트로 조회
-    public List<Tag> getTagByProject(Long projectId) {
-        List<Tag> tags = tagRepository.findByProjectId(projectId);
-
-        if (tags.isEmpty()) {
-            throw new GlobalException(GlobalErrorCode.NOT_FOUND_TAG);
-        }
-
-        return tags;
+    public List<Tag> getTagsByProject(Long projectId, Long userId) {
+        Project project = getProjectById(projectId);
+        validateProjectOwnership(project, userId);
+        return tagRepository.findByProjectId(projectId);
     }
 
-    // TODO : 카드로 조회
-    public List<Tag> getTagByCard(Long cardId) {
-        List<Tag> tags = tagRepository.findByCardId(cardId);
-
-        if (tags.isEmpty()) {
-            throw new GlobalException(GlobalErrorCode.NOT_FOUND_TAG);
-        }
-
-        return tags;
-    }
-
-    // TODO : 태그 삭제
     @Transactional
-    public void deleteTag(Long tagId) {
+    public void deleteTag(Long tagId, Long userId) {
         Tag tag = getTagById(tagId);
-
+        validateTagOwnership(tag, userId);
         tagRepository.delete(tag);
     }
 
-    // TODO : 태그 수정
     @Transactional
-    public Tag updateTag(Long tagId, TagUpdateRequest request) {
+    public Tag updateTag(Long tagId, Long userId, TagUpdateRequest request) {
         Tag tag = getTagById(tagId);
+        validateTagOwnership(tag, userId);
+        validateDuplicateTagName(tag.getProject().getId(), request.getName(), tagId);
 
         if (!TagColor.isValidColor(request.getColor())) {
             throw new GlobalException(GlobalErrorCode.INVALID_COLOR_NAME);
         }
 
         tag.updateTag(request.getName(), request.getColor());
-
         return tag;
     }
 
-    // 헬퍼 메소드
+    // ===== private 헬퍼 메서드들 =====
+
     private Tag getTagById(Long tagId) {
         return tagRepository.findById(tagId)
                 .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_TAG));
@@ -98,14 +82,27 @@ public class TagService {
                 .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_PROJECT));
     }
 
+    private void validateProjectOwnership(Project project, Long userId) {
+        if (!project.getUser().getId().equals(userId)) {
+            throw new GlobalException(GlobalErrorCode.ACCESS_DENIED_PROJECT);
+        }
+    }
 
+    private void validateTagOwnership(Tag tag, Long userId) {
+        if (!tag.getProject().getUser().getId().equals(userId)) {
+            throw new GlobalException(GlobalErrorCode.ACCESS_DENIED_TAG);
+        }
+    }
 
-    // 프로젝트 검증
-    private void validateProject(Long userId, String title) {
+    private void validateDuplicateTagName(Long projectId, String name) {
+        if (tagRepository.existsByProjectIdAndName(projectId, name)) {
+            throw new GlobalException(GlobalErrorCode.DUPLICATE_TAG_NAME);
+        }
+    }
 
-        // Project 이름 중복 검사
-        if (projectRepository.existsByUserIdAndTitle(userId, title)) {
-            throw new GlobalException(GlobalErrorCode.DUPLICATE_PROJECT_TITLE);
+    private void validateDuplicateTagName(Long projectId, String name, Long excludeTagId) {
+        if (tagRepository.existsByProjectIdAndNameAndIdNot(projectId, name, excludeTagId)) {
+            throw new GlobalException(GlobalErrorCode.DUPLICATE_TAG_NAME);
         }
     }
 }

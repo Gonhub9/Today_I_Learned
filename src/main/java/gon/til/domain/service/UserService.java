@@ -1,10 +1,12 @@
 package gon.til.domain.service;
 
+import gon.til.domain.dto.user.UserSignupRequest;
 import gon.til.domain.entity.User;
 import gon.til.domain.repository.UserRepository;
 import gon.til.global.exception.GlobalErrorCode;
 import gon.til.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,17 +16,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // 유저 생성
     @Transactional
-    public User createUser(String username, String email, String password) {
-        validateUser(username, email);
+    public User createUser(UserSignupRequest request) {
+        validateUser(request.getUsername(), request.getEmail());
+
+        String encryptedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = User.builder()
-                .username(username)
-                .email(email)
-                .password(password)
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(encryptedPassword) // 암호화된 비밀번호 저장
                 .build();
+
         return userRepository.save(user);
     }
 

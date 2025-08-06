@@ -1,5 +1,7 @@
 package gon.til.domain.service;
 
+import gon.til.domain.dto.kanbancolumn.KanbanColumnCreateRequest;
+import gon.til.domain.dto.kanbancolumn.KanbanColumnUpdateRequest;
 import gon.til.domain.entity.Board;
 import gon.til.domain.entity.KanbanColumn;
 import gon.til.domain.repository.BoardRepository;
@@ -33,29 +35,20 @@ public class KanbanColumnService {
      *
      * @param boardId 컬럼을 추가할 보드의 ID
      * @param userId  요청을 보낸 사용자의 ID (권한 확인용)
-     * @param title   새로 생성할 컬럼의 이름
+     * @param request   새로 생성할 컬럼의 이름
      * @return 생성된 컬럼 엔티티
      */
-    public KanbanColumn createColumn(Long boardId, Long userId, String title) {
+    public KanbanColumn createColumn(Long boardId, Long userId, KanbanColumnCreateRequest request) {
         // 1. ID를 사용하여 보드 엔티티를 조회합니다. 보드가 없으면 예외를 발생시킵니다.
         Board board = getBoardById(boardId);
 
         // 2. 사용자가 해당 보드를 소유하고 있는지 권한을 확인하고, 컬럼명이 중복되지 않는지 검증합니다.
         validateBoardOwnership(board, userId);
-        validateDuplicateColumnTitle(boardId, title);
 
-        // 3. 새로 추가될 컬럼의 위치(position)를 계산합니다. (기존 컬럼 수 + 1)
-        int newPosition = getNextPosition(boardId);
-
-        // 4. 새로운 칸반 컬럼 객체를 생성합니다.
-        KanbanColumn column = KanbanColumn.builder()
-            .board(board)
-            .title(title)
-            .position(newPosition)
-            .build();
+        validateDuplicateColumnTitle(board.getId(), request.getTitle());
 
         // 5. 생성된 컬럼을 데이터베이스에 저장하고 반환합니다.
-        return kanbanColumnRepository.save(column);
+        return createAndSaveColumn(board, request.getTitle());
     }
 
     /**
@@ -79,10 +72,10 @@ public class KanbanColumnService {
      *
      * @param columnId 수정할 컬럼의 ID
      * @param userId   요청을 보낸 사용자의 ID (권한 확인용)
-     * @param newTitle 새로운 컬럼 제목
+     * @param request 새로운 컬럼 제목
      * @return 제목이 수정된 컬럼 엔티티
      */
-    public KanbanColumn updateColumnTitle(Long columnId, Long userId, String newTitle) {
+    public KanbanColumn updateColumnTitle(Long columnId, Long userId, KanbanColumnUpdateRequest request) {
         // 1. ID를 사용하여 컬럼 엔티티를 조회합니다.
         KanbanColumn column = getColumnById(columnId);
 
@@ -90,10 +83,10 @@ public class KanbanColumnService {
         validateColumnOwnership(column, userId);
 
         // 3. 새로운 제목이 해당 보드 내에서 다른 컬럼과 중복되지 않는지 확인합니다. (자기 자신은 제외)
-        validateDuplicateColumnTitle(column.getBoard().getId(), newTitle, columnId);
+        validateDuplicateColumnTitle(column.getBoard().getId(), request.getTitle(), columnId);
 
         // 4. 컬럼의 제목을 새로운 제목으로 업데이트하고, 변경된 내용을 반환합니다.
-        column.updateColumn(newTitle);
+        column.updateColumn(request.getTitle());
         return column;
     }
 
@@ -177,10 +170,10 @@ public class KanbanColumnService {
     @Transactional
     public void createDefaultColumns(Board board) {
         // createColumn 메서드를 재사용하여 4개의 기본 컬럼을 생성합니다.
-        createColumn(board.getId(), board.getProject().getUser().getId(), "할 일");
-        createColumn(board.getId(), board.getProject().getUser().getId(), "진행 중");
-        createColumn(board.getId(), board.getProject().getUser().getId(), "완료");
-        createColumn(board.getId(), board.getProject().getUser().getId(), "복습 필요");
+        createAndSaveColumn(board, "할 일");
+        createAndSaveColumn(board, "진행 중");
+        createAndSaveColumn(board, "완료");
+        createAndSaveColumn(board, "복습 필요");
     }
 
     // ===== private 헬퍼 메서드들 =====
@@ -262,5 +255,18 @@ public class KanbanColumnService {
             KanbanColumn column = columns.get(i);
             column.updatePosition(i + 1); // position을 1, 2, 3, ... 순으로 업데이트
         }
+    }
+
+    private KanbanColumn createAndSaveColumn(Board board, String title) {
+
+        int newPosition = getNextPosition(board.getId());
+
+        KanbanColumn column = KanbanColumn.builder()
+                .board(board)
+                .title(title)
+                .position(newPosition)
+                .build();
+
+        return kanbanColumnRepository.save(column);
     }
 }

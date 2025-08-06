@@ -35,10 +35,11 @@ public enum GlobalErrorCode {
     DUPLICATE_CARD(HttpStatus.CONFLICT, 409, "이미 카드가 존재합니다."),
     NOT_FOUND_CARD(HttpStatus.NOT_FOUND, 404, "카드가 존재하지 않습니다."),
     ACCESS_DENIED_CARD(HttpStatus.FORBIDDEN, 403, "카드 접근 권한이 없습니다."),
+    TAG_NOT_IN_SAME_PROJECT(HttpStatus.BAD_REQUEST, 400, "태그가 카드가 속한 프로젝트와 다릅니다."),
 
     // 태그 오류코드
     NOT_FOUND_TAG(HttpStatus.NOT_FOUND, 404, "태그가 존재하지 않습니다."),
-    DUPLICATE_TAG(HttpStatus.CONFLICT, 409, "이미 같은 태그가 존재합니다."),
+    DUPLICATE_TAG_NAME(HttpStatus.CONFLICT, 409, "이미 존재하는 태그 이름입니다."),
     ACCESS_DENIED_TAG(HttpStatus.FORBIDDEN, 403, "태그 접근 권한이 없습니다."),
     INVALID_COLOR_NAME(HttpStatus.BAD_REQUEST, 400, "선택할 수 있는 색상이 아닙니다.");
 

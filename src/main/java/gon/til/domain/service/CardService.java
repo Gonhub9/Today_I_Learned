@@ -1,5 +1,8 @@
 package gon.til.domain.service;
 
+import gon.til.domain.dto.card.CardCreateRequest;
+import gon.til.domain.dto.card.CardShiftRequest;
+import gon.til.domain.dto.card.CardUpdateRequest;
 import gon.til.domain.entity.Card;
 import gon.til.domain.entity.KanbanColumn;
 import gon.til.domain.entity.Tag;
@@ -27,7 +30,8 @@ public class CardService {
     private final CardTagRepository cardTagRepository;
 
     // TODO: 카드 생성
-    public Card createCard(Long columnId, Long userId, String title, String content) {
+    @Transactional
+    public Card createCard(Long columnId, Long userId, CardCreateRequest request) {
         KanbanColumn column = getColumnById(columnId);
         User user = getUserById(userId);
 
@@ -36,8 +40,8 @@ public class CardService {
         Card card = Card.builder()
                 .kanbanColumn(column)
                 .user(user)
-                .title(title)
-                .content(content)
+                .title(request.getTitle())
+                .content(request.getContent())
                 .build();
 
         return cardRepository.save(card);
@@ -52,22 +56,29 @@ public class CardService {
     }
 
     // TODO: 카드 수정 (내용, 마감일 등)
-    public Card updateCard(Long cardId, Long userId, String newTitle, String newContent) {
+    @Transactional
+    public Card updateCard(Long cardId, Long userId, CardUpdateRequest request) {
         Card card = getCardById(cardId);
 
         validateCardOwnership(card, userId);
 
-        card.updateCard(newTitle, newContent);
+        card.updateCard(request.getTitle(), request.getContent());
 
         return card;
     }
 
     // TODO: 카드 이동 (다른 컬럼으로)
-    public void shiftCard(Long cardId, Long newColumnId, Integer newPosition) {
+    @Transactional
+    public void shiftCard(Long cardId, Long userId, CardShiftRequest request) {
         // 1. 이동 대상 카드와 원래 위치 정보 가져오기
         Card cardToMove = getCardById(cardId);
+        validateCardOwnership(cardToMove, userId);
+
         Long oldColumnId = cardToMove.getKanbanColumn().getId();
         Integer oldPosition = cardToMove.getPosition();
+
+        Long newColumnId = request.getNewColumnId();
+        Integer newPosition = request.getNewPosition();
 
         if (oldColumnId.equals(newColumnId) && oldPosition.equals(newPosition)) {
             return;
@@ -84,17 +95,27 @@ public class CardService {
     }
 
     // TODO: 카드 삭제
-    public void deleteCard(Long cardId) {
+    @Transactional
+    public void deleteCard(Long cardId, Long userId) {
         Card card = getCardById(cardId);
+        validateCardOwnership(card, userId);
 
         cardRepository.delete(card);
     }
 
     // TODO: 카드에 태그 추가
-    public Card addTagToCard(Long cardId, Long tagId) {
+    @Transactional
+    public Card addTagToCard(Long cardId, Long tagId, Long userId) {
         Card card = getCardById(cardId);
+        validateCardOwnership(card, userId);
 
         Tag tag = getTagById(tagId);
+        validateTagOwnership(tag, userId);
+
+        // 태그가 카드의 프로젝트와 동일한 프로젝트에 속하는지 확인
+        if (!card.getKanbanColumn().getBoard().getProject().getId().equals(tag.getProject().getId())) {
+            throw new GlobalException(GlobalErrorCode.TAG_NOT_IN_SAME_PROJECT);
+        }
 
         card.addTag(tag);
 
@@ -103,8 +124,12 @@ public class CardService {
 
     // TODO: 카드에 태그 삭제
     @Transactional
-    public void removeTagFromCard(Long cardId, Long tagId) {
+    public void removeTagFromCard(Long cardId, Long tagId, Long userId) {
         Card card = getCardById(cardId);
+        validateCardOwnership(card, userId);
+
+        Tag tag = getTagById(tagId);
+        validateTagOwnership(tag, userId);
 
         card.removeTag(tagId);
     }
@@ -149,6 +174,17 @@ public class CardService {
         Long cardOwnerId = card.getKanbanColumn().getBoard().getProject().getUser().getId();
         if (!cardOwnerId.equals(userId)) {
             throw new GlobalException(GlobalErrorCode.ACCESS_DENIED_CARD);
+        }
+    }
+
+    /**
+     * 사용자가 특정 태그에 대한 소유권(수정/삭제 권한)이 있는지 확인합니다.
+     * 태그 -> 프로젝트 -> 사용자 순으로 소유 관계를 확인합니다.
+     */
+    private void validateTagOwnership(Tag tag, Long userId) {
+        Long tagOwnerId = tag.getProject().getUser().getId();
+        if (!tagOwnerId.equals(userId)) {
+            throw new GlobalException(GlobalErrorCode.ACCESS_DENIED_TAG);
         }
     }
 }
