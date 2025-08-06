@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import gon.til.TilApplication;
+import gon.til.domain.dto.user.UserSignupRequest;
 import gon.til.domain.entity.User;
 import gon.til.domain.repository.UserRepository;
 import gon.til.domain.service.UserService;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(classes = TilApplication.class)
@@ -25,40 +27,38 @@ class UserServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Test
     @DisplayName("사용자 생성 성공 테스트")
     void createUser_Success() {
         // Given
-        String username = "testuser";
-        String email = "test@test.com";
-        String password = "password123";
+        UserSignupRequest request = new UserSignupRequest("testuser", "test@test.com", "password123");
 
         // When
-        User createdUser = userService.createUser(username, email, password);
+        User createdUser = userService.createUser(request);
 
         // Then
         assertThat(createdUser.getId()).isNotNull();
-        assertThat(createdUser.getUsername()).isEqualTo(username);
-        assertThat(createdUser.getEmail()).isEqualTo(email);
-        assertThat(createdUser.getPassword()).isEqualTo(password);
+        assertThat(createdUser.getUsername()).isEqualTo(request.getUsername());
+        assertThat(createdUser.getEmail()).isEqualTo(request.getEmail());
+        // 비밀번호가 암호화되어 저장되었는지 확인
+        assertThat(createdUser.getPassword()).isNotEqualTo(request.getPassword());
+        assertThat(passwordEncoder.matches(request.getPassword(), createdUser.getPassword())).isTrue();
     }
 
     @Test
     @DisplayName("중복 이메일로 사용자 생성 실패 테스트")
     void createUser_DuplicateEmail_ThrowsException() {
         // Given
-        String username1 = "user1";
-        String username2 = "user2";
-        String duplicateEmail = "duplicate@test.com";
-        String password = "password123";
+        UserSignupRequest request1 = new UserSignupRequest("user1", "duplicate@test.com", "password123");
+        userService.createUser(request1);
 
-        // 첫 번째 사용자 생성
-        userService.createUser(username1, duplicateEmail, password);
+        UserSignupRequest request2 = new UserSignupRequest("user2", "duplicate@test.com", "password123");
 
         // When & Then
-        assertThatThrownBy(() ->
-                userService.createUser(username2, duplicateEmail, password)
-        )
+        assertThatThrownBy(() -> userService.createUser(request2))
                 .isInstanceOf(GlobalException.class)
                 .extracting("globalErrorCode")
                 .isEqualTo(GlobalErrorCode.DUPLICATE_USER_EMAIL);
@@ -68,18 +68,13 @@ class UserServiceTest {
     @DisplayName("중복 사용자명으로 사용자 생성 실패 테스트")
     void createUser_DuplicateUsername_ThrowsException() {
         // Given
-        String duplicateUsername = "duplicate";
-        String email1 = "email1@test.com";
-        String email2 = "email2@test.com";
-        String password = "password123";
+        UserSignupRequest request1 = new UserSignupRequest("duplicate", "email1@test.com", "password123");
+        userService.createUser(request1);
 
-        // 첫 번째 사용자 생성
-        userService.createUser(duplicateUsername, email1, password);
+        UserSignupRequest request2 = new UserSignupRequest("duplicate", "email2@test.com", "password123");
 
         // When & Then
-        assertThatThrownBy(() ->
-                userService.createUser(duplicateUsername, email2, password)
-        )
+        assertThatThrownBy(() -> userService.createUser(request2))
                 .isInstanceOf(GlobalException.class)
                 .extracting("globalErrorCode")
                 .isEqualTo(GlobalErrorCode.DUPLICATE_USER_NAME);
@@ -89,19 +84,16 @@ class UserServiceTest {
     @DisplayName("이메일로 사용자 조회 성공 테스트")
     void getUserByEmail_Success() {
         // Given
-        String username = "testuser";
-        String email = "test@test.com";
-        String password = "password123";
-
-        User createdUser = userService.createUser(username, email, password);
+        UserSignupRequest request = new UserSignupRequest("testuser", "test@test.com", "password123");
+        User createdUser = userService.createUser(request);
 
         // When
-        User foundUser = userService.getUserByEmail(email);
+        User foundUser = userService.getUserByEmail(request.getEmail());
 
         // Then
         assertThat(foundUser.getId()).isEqualTo(createdUser.getId());
-        assertThat(foundUser.getUsername()).isEqualTo(username);
-        assertThat(foundUser.getEmail()).isEqualTo(email);
+        assertThat(foundUser.getUsername()).isEqualTo(request.getUsername());
+        assertThat(foundUser.getEmail()).isEqualTo(request.getEmail());
     }
 
     @Test
@@ -111,9 +103,7 @@ class UserServiceTest {
         String nonExistentEmail = "notfound@test.com";
 
         // When & Then
-        assertThatThrownBy(() ->
-                userService.getUserByEmail(nonExistentEmail)
-        )
+        assertThatThrownBy(() -> userService.getUserByEmail(nonExistentEmail))
                 .isInstanceOf(GlobalException.class)
                 .extracting("globalErrorCode")
                 .isEqualTo(GlobalErrorCode.NOT_FOUND_USER_EMAIL);

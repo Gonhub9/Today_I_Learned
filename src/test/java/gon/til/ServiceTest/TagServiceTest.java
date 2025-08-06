@@ -1,14 +1,15 @@
 package gon.til.ServiceTest;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import gon.til.domain.common.TagColor;
 import gon.til.domain.dto.tag.TagCreateRequest;
@@ -21,7 +22,6 @@ import gon.til.domain.repository.TagRepository;
 import gon.til.domain.service.TagService;
 import gon.til.global.exception.GlobalErrorCode;
 import gon.til.global.exception.GlobalException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("TagService 통합 테스트")
+@DisplayName("TagService 테스트")
 class TagServiceTest {
 
     @InjectMocks
@@ -52,13 +52,13 @@ class TagServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = User.builder().id(1L).build();
+        user = User.builder().id(1L).username("testuser").build();
         project = Project.builder().id(1L).user(user).title("Test Project").build();
-        tag = Tag.builder().id(1L).name("Test Tag").color(TagColor.PASTEL_RED.getHexCode()).build();
+        tag = Tag.builder().id(1L).project(project).name("Test Tag").color(TagColor.PASTEL_RED.getHexCode()).build();
     }
 
     @Nested
-    @DisplayName("태그 생성 테스트")
+    @DisplayName("태그 생성")
     class CreateTag {
 
         @Test
@@ -66,95 +66,38 @@ class TagServiceTest {
         void createTag_success() {
             // given
             TagCreateRequest request = new TagCreateRequest("New Tag", "GREEN");
-            when(projectRepository.findById(anyLong())).thenReturn(Optional.of(project));
-            when(projectRepository.existsByUserIdAndTitle(anyLong(), anyString())).thenReturn(false);
-            when(tagRepository.save(any(Tag.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            given(projectRepository.findById(project.getId())).willReturn(Optional.of(project));
+            given(tagRepository.existsByProjectIdAndName(project.getId(), request.getName())).willReturn(false);
+            given(tagRepository.save(any(Tag.class))).willAnswer(invocation -> invocation.getArgument(0));
 
             // when
-            Tag createdTag = tagService.createTag(project.getId(), request);
+            Tag createdTag = tagService.createTag(project.getId(), user.getId(), request);
 
             // then
             assertNotNull(createdTag);
             assertEquals(request.getName(), createdTag.getName());
             assertEquals(TagColor.PASTEL_GREEN.getHexCode(), createdTag.getColor());
+            assertEquals(project, createdTag.getProject());
             verify(tagRepository).save(any(Tag.class));
         }
 
         @Test
-        @DisplayName("실패 - 유효하지 않은 색상")
-        void createTag_fail_invalidColor() {
+        @DisplayName("실패 - 중복된 태그 이름")
+        void createTag_fail_duplicateName() {
             // given
-            TagCreateRequest request = new TagCreateRequest("New Tag", "INVALID_COLOR");
-            when(projectRepository.findById(anyLong())).thenReturn(Optional.of(project));
-            when(projectRepository.existsByUserIdAndTitle(anyLong(), anyString())).thenReturn(false);
+            TagCreateRequest request = new TagCreateRequest("Existing Tag", "BLUE");
+            given(projectRepository.findById(project.getId())).willReturn(Optional.of(project));
+            given(tagRepository.existsByProjectIdAndName(project.getId(), request.getName())).willReturn(true);
 
             // when & then
             GlobalException exception = assertThrows(GlobalException.class,
-                () -> tagService.createTag(project.getId(), request));
-            assertEquals(GlobalErrorCode.INVALID_COLOR_NAME.getCode(), exception.getErrorCode());
+                () -> tagService.createTag(project.getId(), user.getId(), request));
+            assertThat(exception.getErrorCode()).isEqualTo(GlobalErrorCode.DUPLICATE_TAG_NAME.getCode());
         }
     }
 
     @Nested
-    @DisplayName("태그 조회 테스트")
-    class ReadTag {
-
-        @Test
-        @DisplayName("프로젝트 ID로 조회 성공")
-        void getTagByProject_success() {
-            // given
-            when(tagRepository.findByProjectId(anyLong())).thenReturn(List.of(tag));
-
-            // when
-            List<Tag> tags = tagService.getTagByProject(project.getId());
-
-            // then
-            assertEquals(1, tags.size());
-            assertEquals(tag.getName(), tags.getFirst().getName());
-        }
-
-        @Test
-        @DisplayName("프로젝트 ID로 조회 실패 - 결과 없음")
-        void getTagByProject_fail_notFound() {
-            // given
-            when(tagRepository.findByProjectId(anyLong())).thenReturn(Collections.emptyList());
-
-            // when & then
-            GlobalException exception = assertThrows(GlobalException.class,
-                () -> tagService.getTagByProject(project.getId()));
-            assertEquals(GlobalErrorCode.NOT_FOUND_TAG.getCode(), exception.getErrorCode());
-        }
-
-        @Test
-        @DisplayName("카드 ID로 조회 성공")
-        void getTagByCard_success() {
-            // given
-            Long cardId = 1L;
-            when(tagRepository.findByCardId(anyLong())).thenReturn(List.of(tag));
-
-            // when
-            List<Tag> tags = tagService.getTagByCard(cardId);
-
-            // then
-            assertEquals(1, tags.size());
-        }
-
-        @Test
-        @DisplayName("카드 ID로 조회 실패 - 결과 없음")
-        void getTagByCard_fail_notFound() {
-            // given
-            Long cardId = 1L;
-            when(tagRepository.findByCardId(anyLong())).thenReturn(Collections.emptyList());
-
-            // when & then
-            GlobalException exception = assertThrows(GlobalException.class,
-                () -> tagService.getTagByCard(cardId));
-            assertEquals(GlobalErrorCode.NOT_FOUND_TAG.getCode(), exception.getErrorCode());
-        }
-    }
-
-    @Nested
-    @DisplayName("태그 수정 테스트")
+    @DisplayName("태그 수정")
     class UpdateTag {
 
         @Test
@@ -162,10 +105,11 @@ class TagServiceTest {
         void updateTag_success() {
             // given
             TagUpdateRequest request = new TagUpdateRequest("Updated Tag", "BLUE");
-            when(tagRepository.findById(anyLong())).thenReturn(Optional.of(tag));
+            given(tagRepository.findById(tag.getId())).willReturn(Optional.of(tag));
+            given(tagRepository.existsByProjectIdAndNameAndIdNot(anyLong(), anyString(), anyLong())).willReturn(false);
 
             // when
-            Tag updatedTag = tagService.updateTag(tag.getId(), request);
+            Tag updatedTag = tagService.updateTag(tag.getId(), user.getId(), request);
 
             // then
             assertEquals(request.getName(), updatedTag.getName());
@@ -173,48 +117,46 @@ class TagServiceTest {
         }
 
         @Test
-        @DisplayName("실패 - 존재하지 않는 태그")
-        void updateTag_fail_tagNotFound() {
+        @DisplayName("실패 - 다른 사용자의 태그")
+        void updateTag_fail_accessDenied() {
             // given
+            Long otherUserId = 99L;
             TagUpdateRequest request = new TagUpdateRequest("Updated Tag", "BLUE");
-            when(tagRepository.findById(anyLong())).thenReturn(Optional.empty());
+            given(tagRepository.findById(tag.getId())).willReturn(Optional.of(tag));
 
             // when & then
             GlobalException exception = assertThrows(GlobalException.class,
-                () -> tagService.updateTag(999L, request));
-            assertEquals(GlobalErrorCode.NOT_FOUND_TAG.getCode(), exception.getErrorCode());
+                () -> tagService.updateTag(tag.getId(), otherUserId, request));
+            assertThat(exception.getErrorCode()).isEqualTo(GlobalErrorCode.ACCESS_DENIED_TAG.getCode());
         }
     }
 
     @Nested
-    @DisplayName("태그 삭제 테스트")
+    @DisplayName("태그 삭제")
     class DeleteTag {
 
         @Test
         @DisplayName("성공")
         void deleteTag_success() {
             // given
-            when(tagRepository.findById(anyLong())).thenReturn(Optional.of(tag));
-            doNothing().when(tagRepository).delete(any(Tag.class));
+            given(tagRepository.findById(tag.getId())).willReturn(Optional.of(tag));
 
-            // when
-            tagService.deleteTag(tag.getId());
-
-            // then
-            verify(tagRepository).findById(tag.getId());
+            // when & then
+            assertDoesNotThrow(() -> tagService.deleteTag(tag.getId(), user.getId()));
             verify(tagRepository).delete(tag);
         }
 
         @Test
-        @DisplayName("실패 - 존재하지 않는 태그")
-        void deleteTag_fail_notFound() {
+        @DisplayName("실패 - 다른 사용자의 태그")
+        void deleteTag_fail_accessDenied() {
             // given
-            when(tagRepository.findById(anyLong())).thenReturn(Optional.empty());
+            Long otherUserId = 99L;
+            given(tagRepository.findById(tag.getId())).willReturn(Optional.of(tag));
 
             // when & then
             GlobalException exception = assertThrows(GlobalException.class,
-                () -> tagService.deleteTag(999L));
-            assertEquals(GlobalErrorCode.NOT_FOUND_TAG.getCode(), exception.getErrorCode());
+                () -> tagService.deleteTag(tag.getId(), otherUserId));
+            assertThat(exception.getErrorCode()).isEqualTo(GlobalErrorCode.ACCESS_DENIED_TAG.getCode());
         }
     }
 }

@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import gon.til.domain.dto.kanbancolumn.KanbanColumnCreateRequest;
 import gon.til.domain.entity.Board;
 import gon.til.domain.entity.KanbanColumn;
 import gon.til.domain.entity.Project;
@@ -17,6 +17,7 @@ import gon.til.domain.entity.User;
 import gon.til.domain.repository.BoardRepository;
 import gon.til.domain.repository.KanbanColumnRepository;
 import gon.til.domain.service.KanbanColumnService;
+import gon.til.global.exception.GlobalErrorCode;
 import gon.til.global.exception.GlobalException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -64,13 +66,12 @@ class KanbanColumnServiceTest {
     @DisplayName("컬럼 생성 성공")
     void createColumn_success() {
         // given
-        String newTitle = "New Column";
+        KanbanColumnCreateRequest request = new KanbanColumnCreateRequest(board.getId(), "New Column"); // DTO 생성
         given(boardRepository.findById(board.getId())).willReturn(Optional.of(board));
-        given(kanbanColumnRepository.existsByBoardIdAndTitle(board.getId(), newTitle)).willReturn(false);
+        given(kanbanColumnRepository.existsByBoardIdAndTitle(board.getId(), request.getTitle())).willReturn(false);
         given(kanbanColumnRepository.findByBoardIdOrderByPosition(board.getId())).willReturn(columns);
         given(kanbanColumnRepository.save(any(KanbanColumn.class))).willAnswer(invocation -> {
             KanbanColumn savedColumn = invocation.getArgument(0);
-            // 실제 id를 할당하는 것처럼 흉내
             return KanbanColumn.builder()
                 .id(4L)
                 .title(savedColumn.getTitle())
@@ -80,10 +81,10 @@ class KanbanColumnServiceTest {
         });
 
         // when
-        KanbanColumn newColumn = kanbanColumnService.createColumn(board.getId(), user.getId(), newTitle);
+        KanbanColumn newColumn = kanbanColumnService.createColumn(board.getId(), user.getId(), request);
 
         // then
-        assertThat(newColumn.getTitle()).isEqualTo(newTitle);
+        assertThat(newColumn.getTitle()).isEqualTo(request.getTitle());
         assertThat(newColumn.getPosition()).isEqualTo(columns.size() + 1);
         verify(kanbanColumnRepository).save(any(KanbanColumn.class));
     }
@@ -146,22 +147,19 @@ class KanbanColumnServiceTest {
     @DisplayName("기본 컬럼 생성 성공")
     void createDefaultColumns_success() {
         // given
-        // createColumn 내부에서 호출되는 메서드들을 mock
-        given(boardRepository.findById(anyLong())).willReturn(Optional.of(board));
-        given(kanbanColumnRepository.existsByBoardIdAndTitle(anyLong(), anyString())).willReturn(false);
-        // getNextPosition이 호출될 때마다 다른 값을 반환하도록 설정
-        given(kanbanColumnRepository.findByBoardIdOrderByPosition(anyLong()))
-            .willReturn(new ArrayList<>()) // 첫번째 호출
-            .willReturn(List.of(KanbanColumn.builder().build())) // 두번째 호출
-            .willReturn(List.of(KanbanColumn.builder().build(), KanbanColumn.builder().build())) // 세번째 호출
-            .willReturn(List.of(KanbanColumn.builder().build(), KanbanColumn.builder().build(), KanbanColumn.builder().build())); // 네번째 호출
+        given(kanbanColumnRepository.findByBoardIdOrderByPosition(anyLong())).willReturn(new ArrayList<>());
+        ArgumentCaptor<KanbanColumn> columnCaptor = ArgumentCaptor.forClass(KanbanColumn.class);
 
         // when
         kanbanColumnService.createDefaultColumns(board);
 
         // then
-        // save가 4번 호출되었는지 검증
-        verify(kanbanColumnRepository, times(4)).save(any(KanbanColumn.class));
+        verify(kanbanColumnRepository, times(4)).save(columnCaptor.capture());
+        List<KanbanColumn> capturedColumns = columnCaptor.getAllValues();
+        assertThat(capturedColumns.get(0).getTitle()).isEqualTo("할 일");
+        assertThat(capturedColumns.get(1).getTitle()).isEqualTo("진행 중");
+        assertThat(capturedColumns.get(2).getTitle()).isEqualTo("완료");
+        assertThat(capturedColumns.get(3).getTitle()).isEqualTo("복습 필요");
     }
 
     @Test
@@ -169,7 +167,7 @@ class KanbanColumnServiceTest {
     void deleteColumn_fail_accessDenied() {
         // given
         Long otherUserId = 99L;
-        KanbanColumn columnToDelete = columns.get(0);
+        KanbanColumn columnToDelete = columns.getFirst();
         given(kanbanColumnRepository.findById(columnToDelete.getId())).willReturn(Optional.of(columnToDelete));
 
         // when & then
@@ -177,6 +175,6 @@ class KanbanColumnServiceTest {
             kanbanColumnService.deleteColumn(columnToDelete.getId(), otherUserId);
         });
         
-        assertThat(exception.getMessage()).isEqualTo("컬럼 접근 권한이 없습니다.");
+        assertThat(exception.getErrorCode()).isEqualTo(GlobalErrorCode.ACCESS_DENIED_COLUMN.getCode());
     }
 }
