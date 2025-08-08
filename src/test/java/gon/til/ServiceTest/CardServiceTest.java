@@ -132,7 +132,9 @@ class CardServiceTest {
         // card.removeTag 메서드에 대한 doAnswer 설정
         doAnswer(invocation -> {
             Long tagIdToRemove = invocation.getArgument(0);
-            cardTagsSet.removeIf(cardTag -> cardTag.getTag().getId().equals(tagIdToRemove));
+            cardTagsSet.removeIf(cardTag -> cardTag.getTag()
+                    .getId()
+                    .equals(tagIdToRemove));
             return null;
         }).when(card).removeTag(any(Long.class));
     }

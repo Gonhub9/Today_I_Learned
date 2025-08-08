@@ -8,6 +8,10 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum GlobalErrorCode {
 
+    // 서버 오류코드
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, 400, "유효성 검사를 실패했습니다."),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 500, "서버 에러입니다."),
+
     // 유저 오류코드
     DUPLICATE_USER_NAME(HttpStatus.CONFLICT, 409, "이미 존재하는 사용자명입니다."),
     DUPLICATE_USER_EMAIL(HttpStatus.CONFLICT, 409, "이미 존재하는 이메일입니다."),
