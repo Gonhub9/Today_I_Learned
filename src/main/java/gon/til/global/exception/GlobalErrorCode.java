@@ -18,6 +18,7 @@ public enum GlobalErrorCode {
 
     NOT_FOUND_USER_EMAIL(HttpStatus.NOT_FOUND, 404, "이메일이 존재하지 않습니다."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, 404, "유저가 존재하지 않습니다."),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, 400, "비밀번호가 일치하지 않습니다."),
 
     // 프로젝트 오류코드
     DUPLICATE_PROJECT_TITLE(HttpStatus.CONFLICT, 409, "같은 이름의 프로젝트가 존재합니다."),

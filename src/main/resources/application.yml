@@ -12,3 +12,7 @@ spring:
   h2:
     console:
       enabled: true
+
+# JWT
+jwt:
+  secret: VERY_VERY_SECRET_KEY_FOR_TIL_PROJECT_DONT_SHARE_THIS_KEY_WITH_ANYONE_BE_CAREFUL
