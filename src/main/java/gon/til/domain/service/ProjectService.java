@@ -84,9 +84,11 @@ public class ProjectService {
 
     // 프로젝트 검증
     private void validateProject(Long userId, String title) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_USER));
 
         // Project 이름 중복 검사
-        if (projectRepository.existsByUserIdAndTitle(userId, title)) {
+        if (projectRepository.existsByTitleAndUser(title, user)) {
             throw new GlobalException(GlobalErrorCode.DUPLICATE_PROJECT_TITLE);
         }
     }

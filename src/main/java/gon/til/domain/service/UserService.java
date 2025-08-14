@@ -7,7 +7,8 @@ import gon.til.domain.repository.UserRepository;
 import gon.til.global.exception.GlobalErrorCode;
 import gon.til.global.exception.GlobalException;
 import gon.til.global.jwt.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
+import java.util.Collections;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,16 +16,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-
 @Service
-@RequiredArgsConstructor
+@Lazy
 @Transactional(readOnly = true)
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+
+    public UserService(
+            UserRepository userRepository,
+            @Lazy PasswordEncoder passwordEncoder,
+            JwtTokenProvider jwtTokenProvider) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
 
     // 유저 생성
     @Transactional
