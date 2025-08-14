@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Lazy
 @Transactional(readOnly = true)
 public class UserService implements UserDetailsService {
 
@@ -60,7 +59,7 @@ public class UserService implements UserDetailsService {
             throw new GlobalException(GlobalErrorCode.INVALID_PASSWORD);
         }
 
-        return jwtTokenProvider.createToken(user.getUsername());
+        return jwtTokenProvider.createToken(user.getEmail());
     }
 
     // 이메일로 유저 찾기
@@ -84,10 +83,10 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("유저를 찾지 못했습니다." + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), Collections.emptyList());
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), Collections.emptyList());
     }
 }

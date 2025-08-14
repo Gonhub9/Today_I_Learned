@@ -14,21 +14,21 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    public String createToken(String username) {
+    public String createToken(String email) {
         Date now = new Date();
         // 1시간
         long accessTokenValidityInMilliseconds = 3600000;
         Date validity = new Date(now.getTime() + accessTokenValidityInMilliseconds);
 
         return Jwts.builder()
-                .subject(username)
+                .subject(email)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(getSigningKey())
                 .compact();
     }
 
-    public String getUsername(String token) {
+    public String getEmail(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
