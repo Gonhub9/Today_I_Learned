@@ -55,6 +55,7 @@ public class KanbanColumn {
 
     // Card 연관관계 (1 : N)
     @OneToMany(mappedBy = "kanbanColumn", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Card> cards = new ArrayList<>();
 
     // 칼럼 수정

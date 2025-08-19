@@ -53,6 +53,7 @@ public class Board {
 
     // Board -> KanbanColumn 연관관계 (1 : N)
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<KanbanColumn> columns = new ArrayList<>();
 
     public Board(String title, Project project) {

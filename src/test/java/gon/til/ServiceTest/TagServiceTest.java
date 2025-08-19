@@ -52,7 +52,7 @@ class TagServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = User.builder().id(1L).username("testuser").build();
+        user = User.builder().id(1L).displayName("testuser").build();
         project = Project.builder().id(1L).user(user).title("Test Project").build();
         tag = Tag.builder().id(1L).project(project).name("Test Tag").color(TagColor.PASTEL_RED.getHexCode()).build();
     }

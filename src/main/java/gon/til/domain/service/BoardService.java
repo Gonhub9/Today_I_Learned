@@ -57,7 +57,7 @@ public class BoardService {
     public Board getBoardByProject(Long projectId, Long boardId) {
 
         // 보드 조회
-        return boardRepository.findByProjectIdAndBoardId(projectId, boardId)
+        return boardRepository.findByProjectIdAndId(projectId, boardId)
                 .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_BOARD));
 
     }
@@ -65,7 +65,7 @@ public class BoardService {
     public List<BoardResponse> findAllBoards() {
 
         // 보드 전체 조회
-        List<Board> boards = boardRepository.findAll();
+        List<Board> boards = boardRepository.findAllWithColumns();
 
         // Board 엔티티 리스트를 DTO로 변환
         // 데이터가 없으면 비어있는 리스트가 반환

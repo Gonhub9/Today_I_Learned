@@ -42,7 +42,7 @@ public class UserIntegrationTest {
                 // then: 회원가입 성공
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("testuser@example.com"))
-                .andExpect(jsonPath("$.username").value("TestUser"));
+                .andExpect(jsonPath("$.displayName").value("TestUser"));
 
         // given: 로그인 정보
         Map<String, String> loginRequest = new HashMap<>();

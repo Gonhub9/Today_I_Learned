@@ -41,7 +41,7 @@ public class User implements UserDetails {
     private Long id;
 
     @NotBlank
-    private String username;
+    private String displayName;
 
     @Email
     @NotBlank
@@ -60,11 +60,12 @@ public class User implements UserDetails {
 
     // 연관관계 (User -> Project)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Project> projects = new ArrayList<>();
 
     // 사용자 정의 생성
-    public User(String username, String email, String password) {
-        this.username = username;
+    public User(String displayName, String email, String password) {
+        this.displayName = displayName;
         this.email = email;
         this.password = password;
     }
@@ -80,6 +81,7 @@ public class User implements UserDetails {
         return this.password;
     }
 
+    // 이메일을 로그인 ID로 사용
     @Override
     public String getUsername() {
         return this.email;

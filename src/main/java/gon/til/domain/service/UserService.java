@@ -40,7 +40,7 @@ public class UserService implements UserDetailsService {
         String encryptedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = User.builder()
-                .username(request.getUsername())
+                .displayName(request.getUsername())
                 .email(request.getEmail())
                 .password(encryptedPassword) // 암호화된 비밀번호 저장
                 .build();
@@ -68,10 +68,10 @@ public class UserService implements UserDetailsService {
     }
 
     // 유저 검증
-    private void validateUser(String username, String email) {
+    private void validateUser(String displayName, String email) {
 
         // 사용자명 검증
-        if (userRepository.existsByUsername(username)) {
+        if (userRepository.existsByDisplayName(displayName)) {
             throw new GlobalException(GlobalErrorCode.DUPLICATE_USER_NAME);
         }
 
