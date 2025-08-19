@@ -9,6 +9,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
 
     // Project와 1:1 관계
     Optional<Board> findByProject(Project project);
-    Optional<Board> findByProjectId(Long projectId);
+    Optional<Board> findByProjectIdAndBoardId(Long projectId, Long boardId);
+
     boolean existsByProjectId(Long projectId);
+    boolean existsByBoardId(Long boardId);
 }

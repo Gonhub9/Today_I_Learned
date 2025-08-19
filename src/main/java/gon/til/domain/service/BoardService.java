@@ -1,6 +1,7 @@
 package gon.til.domain.service;
 
 import gon.til.domain.dto.board.BoardCreateRequest;
+import gon.til.domain.dto.board.BoardResponse;
 import gon.til.domain.dto.board.BoardUpdateRequest;
 import gon.til.domain.entity.Board;
 import gon.til.domain.entity.Project;
@@ -8,6 +9,8 @@ import gon.til.domain.repository.BoardRepository;
 import gon.til.domain.repository.ProjectRepository;
 import gon.til.global.exception.GlobalErrorCode;
 import gon.til.global.exception.GlobalException;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,16 +54,24 @@ public class BoardService {
      * - 프로젝트에 연결된 보드 반환
      * - 보드가 없으면 예외 발생
      */
-    public Board getBoardByProject(Long projectId) {
-
-        // 프로젝트 확인
-        if (!projectRepository.existsById(projectId)) {
-            throw new GlobalException(GlobalErrorCode.NOT_FOUND_PROJECT);
-        }
+    public Board getBoardByProject(Long projectId, Long boardId) {
 
         // 보드 조회
-        return boardRepository.findByProjectId(projectId)
+        return boardRepository.findByProjectIdAndBoardId(projectId, boardId)
                 .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_BOARD));
+
+    }
+
+    public List<BoardResponse> findAllBoards() {
+
+        // 보드 전체 조회
+        List<Board> boards = boardRepository.findAll();
+
+        // Board 엔티티 리스트를 DTO로 변환
+        // 데이터가 없으면 비어있는 리스트가 반환
+        return boards.stream()
+                .map(BoardResponse::from)
+                .collect(Collectors.toList());
 
     }
 

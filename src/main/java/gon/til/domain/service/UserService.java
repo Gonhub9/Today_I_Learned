@@ -7,7 +7,6 @@ import gon.til.domain.repository.UserRepository;
 import gon.til.global.exception.GlobalErrorCode;
 import gon.til.global.exception.GlobalException;
 import gon.til.global.jwt.JwtTokenProvider;
-import java.util.Collections;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -84,9 +83,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), Collections.emptyList());
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("유저를 찾지 못했습니다. email: " + email));
     }
 }
