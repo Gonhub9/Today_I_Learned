@@ -31,7 +31,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(user));
     }
 
-    @GetMapping("/users/me")
+    @GetMapping("/me")
     public ResponseEntity<UserResponse> getMyProfile(@AuthenticationPrincipal User user) {
 
         // 파라미터로 받은 user 객체엔 현재 로그인한 사용자의 모든 정보가 있음
