@@ -1,6 +1,7 @@
 package gon.til.ServiceTest;
 
 import gon.til.domain.dto.project.ProjectCreateRequest;
+import gon.til.domain.dto.project.ProjectResponse;
 import gon.til.domain.dto.project.ProjectUpdateRequest;
 import gon.til.domain.entity.Project;
 import gon.til.domain.entity.User;
@@ -63,12 +64,11 @@ class ProjectServiceTest {
             });
 
             // When
-            Project createdProject = projectService.createProject(userId, request);
+            ProjectResponse createdProject = projectService.createProject(userId, request);
 
             // Then
             assertThat(createdProject.getId()).isNotNull();
             assertThat(createdProject.getTitle()).isEqualTo(request.getTitle());
-            assertThat(createdProject.getUser().getId()).isEqualTo(userId);
         }
 
         @Test
@@ -100,14 +100,13 @@ class ProjectServiceTest {
             Long userId = 1L;
             Long projectId = 1L;
             User testUser = User.builder().id(userId).build();
-            Project project = Project.builder().id(projectId).user(testUser).build();
+            Project project = Project.builder().id(projectId).user(testUser).title("원본").description("원본 설명").category("FE").build();
             ProjectUpdateRequest updateRequest = new ProjectUpdateRequest("수정", "수정 설명", "BE");
 
             when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
-            when(projectRepository.save(any(Project.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             // When
-            Project updatedProject = projectService.updateProject(projectId, userId, updateRequest);
+            ProjectResponse updatedProject = projectService.updateProject(projectId, userId, updateRequest);
 
             // Then
             assertThat(updatedProject.getTitle()).isEqualTo(updateRequest.getTitle());

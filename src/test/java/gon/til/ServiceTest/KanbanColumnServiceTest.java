@@ -1,14 +1,6 @@
 package gon.til.ServiceTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
+import gon.til.domain.dto.kanbancolumn.KanbanColumnResponse;
 import gon.til.domain.dto.kanbancolumn.KanbanColumnCreateRequest;
 import gon.til.domain.entity.Board;
 import gon.til.domain.entity.KanbanColumn;
@@ -30,6 +22,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("KanbanColumnService 테스트")
@@ -81,7 +80,7 @@ class KanbanColumnServiceTest {
         });
 
         // when
-        KanbanColumn newColumn = kanbanColumnService.createColumn(board.getId(), user.getId(), request);
+        KanbanColumnResponse newColumn = kanbanColumnService.createColumn(board.getId(), user.getId(), request);
 
         // then
         assertThat(newColumn.getTitle()).isEqualTo(request.getTitle());
@@ -130,7 +129,7 @@ class KanbanColumnServiceTest {
         given(kanbanColumnRepository.findAllByIdIn(newOrderIds)).willReturn(columns);
 
         // when
-        List<KanbanColumn> updatedColumns = kanbanColumnService.updateColumnPositions(board.getId(), user.getId(), newOrderIds);
+        List<KanbanColumnResponse> updatedColumns = kanbanColumnService.updateColumnPositions(board.getId(), user.getId(), newOrderIds);
 
         // then
         assertThat(updatedColumns).hasSize(3);
@@ -167,7 +166,7 @@ class KanbanColumnServiceTest {
     void deleteColumn_fail_accessDenied() {
         // given
         Long otherUserId = 99L;
-        KanbanColumn columnToDelete = columns.getFirst();
+        KanbanColumn columnToDelete = columns.get(0);
         given(kanbanColumnRepository.findById(columnToDelete.getId())).willReturn(Optional.of(columnToDelete));
 
         // when & then
