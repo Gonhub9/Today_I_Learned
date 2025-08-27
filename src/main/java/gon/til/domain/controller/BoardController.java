@@ -20,48 +20,55 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Board", description = "보드 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/boards")
 public class BoardController {
 
     private final BoardService boardService;
 
-    @GetMapping("/boards")
-    public ResponseEntity<List<BoardResponse>> getAllBoards() {
-        List<BoardResponse> boards = boardService.findAllBoards();
+    @GetMapping()
+    public ResponseEntity<List<BoardResponse>> getAllBoards(
+            @AuthenticationPrincipal User user
+    ) {
+        List<BoardResponse> boards = boardService.findAllBoards(user.getId());
         return ResponseEntity.ok(boards);
     }
 
     @GetMapping("/projects/{projectId}/boards/{boardId}")
     public ResponseEntity<BoardResponse> getBoardId(
             @PathVariable("projectId") Long projectId,
-            @PathVariable("boardId") Long boardId) {
-        Board board = boardService.getBoardByProject(projectId, boardId);
-        return ResponseEntity.status(HttpStatus.OK).body(BoardResponse.from(board));
+            @PathVariable("boardId") Long boardId,
+            @AuthenticationPrincipal User user
+    ) {
+        BoardResponse board = boardService.getBoardByProject(projectId, boardId, user.getId());
+        return ResponseEntity.ok(board);
     }
 
-    @PostMapping("/projects/{projectsId}/boards")
+    @PostMapping("/projects/{projectId}/boards")
     public ResponseEntity<BoardResponse> createBoard(
             @PathVariable("projectId") Long projectId,
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody BoardCreateRequest request) {
-        Board board = boardService.createBoard(projectId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(BoardResponse.from(board));
+        BoardResponse board = boardService.createBoard(projectId, user.getId(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(board);
     }
 
-    @PutMapping("/boards/{boardId}")
+    @PutMapping("/{boardId}")
     public ResponseEntity<BoardResponse> updateBoard(
             @PathVariable("boardId") Long boardId,
             @AuthenticationPrincipal User user,
             @Valid @RequestBody BoardUpdateRequest request) {
 
-        Board board = boardService.updateBoardTitle(boardId, user.getId(), request);
+        BoardResponse board = boardService.updateBoardTitle(boardId, user.getId(), request);
 
-        return ResponseEntity.status(HttpStatus.OK).body(BoardResponse.from(board));
+        return ResponseEntity.status(HttpStatus.OK).body(board);
     }
 
-    @DeleteMapping("/boards/{boardId}")
+    @DeleteMapping("/{boardId}")
     public ResponseEntity<Void> deleteBoard(
             @AuthenticationPrincipal User user,
             @PathVariable Long boardId) {

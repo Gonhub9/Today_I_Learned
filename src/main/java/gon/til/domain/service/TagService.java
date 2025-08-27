@@ -2,6 +2,7 @@ package gon.til.domain.service;
 
 import gon.til.domain.common.TagColor;
 import gon.til.domain.dto.tag.TagCreateRequest;
+import gon.til.domain.dto.tag.TagResponse;
 import gon.til.domain.dto.tag.TagUpdateRequest;
 import gon.til.domain.entity.Project;
 import gon.til.domain.entity.Tag;
@@ -10,6 +11,7 @@ import gon.til.domain.repository.TagRepository;
 import gon.til.global.exception.GlobalErrorCode;
 import gon.til.global.exception.GlobalException;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +25,7 @@ public class TagService {
     private final ProjectRepository projectRepository;
 
     @Transactional
-    public Tag createTag(Long projectId, Long userId, TagCreateRequest request) {
+    public TagResponse createTag(Long projectId, Long userId, TagCreateRequest request) {
         Project project = getProjectById(projectId);
         validateProjectOwnership(project, userId);
         validateDuplicateTagName(projectId, request.getName());
@@ -40,13 +42,16 @@ public class TagService {
                 .color(tagColor.getHexCode())
                 .build();
 
-        return tagRepository.save(tag);
+        Tag savedTag = tagRepository.save(tag);
+        return TagResponse.from(savedTag);
     }
 
-    public List<Tag> getTagsByProject(Long projectId, Long userId) {
+    public List<TagResponse> getTagsByProject(Long projectId, Long userId) {
         Project project = getProjectById(projectId);
         validateProjectOwnership(project, userId);
-        return tagRepository.findByProjectId(projectId);
+        return tagRepository.findByProjectId(projectId).stream()
+            .map(TagResponse::from)
+            .collect(Collectors.toList());
     }
 
     @Transactional
@@ -57,7 +62,7 @@ public class TagService {
     }
 
     @Transactional
-    public Tag updateTag(Long tagId, Long userId, TagUpdateRequest request) {
+    public TagResponse updateTag(Long tagId, Long userId, TagUpdateRequest request) {
         Tag tag = getTagById(tagId);
         validateTagOwnership(tag, userId);
         validateDuplicateTagName(tag.getProject().getId(), request.getName(), tagId);
@@ -67,7 +72,7 @@ public class TagService {
         }
 
         tag.updateTag(request.getName(), request.getColor());
-        return tag;
+        return TagResponse.from(tag);
     }
 
     // ===== private 헬퍼 메서드들 =====

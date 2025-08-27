@@ -27,6 +27,7 @@ public enum GlobalErrorCode {
 
     // 보드 오류코드
     DUPLICATE_BOARD(HttpStatus.CONFLICT, 409, "이미 보드가 존재합니다."),
+    DUPLICATE_BOARD_TITLE(HttpStatus.CONFLICT, 409, "이미 같은 이름의 보드가 존재합니다."),
     NOT_FOUND_BOARD(HttpStatus.NOT_FOUND, 404, "보드가 존재하지 않습니다."),
     ACCESS_DENIED_BOARD(HttpStatus.FORBIDDEN, 403, "보드 접근 권한이 없습니다."),
 

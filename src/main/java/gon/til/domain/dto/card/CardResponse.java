@@ -16,6 +16,7 @@ public class CardResponse {
     private final String title;
     private final String content;
     private final Integer position;
+    private final Long columnId;
     private final List<TagResponse> tags;
 
     public static CardResponse from(Card card) {
@@ -28,6 +29,7 @@ public class CardResponse {
                 card.getTitle(),
                 card.getContent(),
                 card.getPosition(),
+                card.getKanbanColumn().getId(),
                 tagResponses
         );
     }

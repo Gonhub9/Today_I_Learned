@@ -31,10 +31,12 @@ public class BoardService {
      * - 보드 생성 시 기본 컬럼(할 일, 진행 중, 완료, 복습 필요) 자동 생성
      */
     @Transactional
-    public Board createBoard(Long projectId, BoardCreateRequest request) {
+    public BoardResponse createBoard(Long projectId, Long userId, BoardCreateRequest request) {
 
         // 1. 프로젝트가 있는지 확인 및 조회
         Project project = getProjectById(projectId);
+
+        validateProjectOwnership(projectId, userId);
 
         // 2. 중복 보드 확인
         validateDuplicateBoard(projectId);
@@ -46,7 +48,7 @@ public class BoardService {
         // 4. 기본 컬럼 생성
         kanbanColumnService.createDefaultColumns(savedBoard);
 
-        return savedBoard;
+        return BoardResponse.from(savedBoard);
     }
 
     /**
@@ -54,18 +56,23 @@ public class BoardService {
      * - 프로젝트에 연결된 보드 반환
      * - 보드가 없으면 예외 발생
      */
-    public Board getBoardByProject(Long projectId, Long boardId) {
+    public BoardResponse getBoardByProject(Long projectId, Long boardId, Long userId) {
 
-        // 보드 조회
-        return boardRepository.findByProjectIdAndId(projectId, boardId)
-                .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_BOARD));
+        Board board = getBoardById(boardId);
 
+        validateBoardOwnership(board, userId);
+
+        if (!board.getProject().getId().equals(projectId)) {
+            throw new GlobalException(GlobalErrorCode.NOT_FOUND_BOARD);
+        }
+
+       return BoardResponse.from(board);
     }
 
-    public List<BoardResponse> findAllBoards() {
+    public List<BoardResponse> findAllBoards(Long userId) {
 
         // 보드 전체 조회
-        List<Board> boards = boardRepository.findAllWithColumns();
+        List<Board> boards = boardRepository.findAllByUserId(userId);
 
         // Board 엔티티 리스트를 DTO로 변환
         // 데이터가 없으면 비어있는 리스트가 반환
@@ -80,7 +87,7 @@ public class BoardService {
      * - 보드 소유자인지 확인 (프로젝트 소유자 = 보드 소유자)
      */
     @Transactional
-    public Board updateBoardTitle(Long boardId, Long userId, BoardUpdateRequest request) {
+    public BoardResponse updateBoardTitle(Long boardId, Long userId, BoardUpdateRequest request) {
 
         // 1. 보드 존재 확인
         Board board = getBoardById(boardId);
@@ -88,10 +95,14 @@ public class BoardService {
         // 2. 보드 소유권 확인 (보드 → 프로젝트 → 사용자)
         validateBoardOwnership(board, userId);
 
+        if (boardRepository.existsByTitleAndUserIdAndIdNot(request.getTitle(), userId, boardId)) {
+            throw new GlobalException(GlobalErrorCode.DUPLICATE_BOARD_TITLE);
+        }
+
         // 3. 제목 수정
         board.updateBoard(request.getTitle());
 
-        return board;
+        return BoardResponse.from(board);
 
     }
 
@@ -130,6 +141,14 @@ public class BoardService {
     private Board getBoardById(Long boardId) {
         return boardRepository.findById(boardId)
                 .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_BOARD));
+    }
+
+    private void validateProjectOwnership(Long projectId, Long userId) {
+        Project project = getProjectById(projectId);
+
+        if (!project.getUser().getId().equals(userId)) {
+            throw new GlobalException(GlobalErrorCode.ACCESS_DENIED_PROJECT);
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package gon.til.domain.service;
 
+import gon.til.domain.dto.user.UserResponse;
 import gon.til.domain.dto.user.UserLoginRequest;
 import gon.til.domain.dto.user.UserSignupRequest;
 import gon.til.domain.entity.User;
@@ -34,7 +35,7 @@ public class UserService implements UserDetailsService {
 
     // 유저 생성
     @Transactional
-    public User createUser(UserSignupRequest request) {
+    public UserResponse createUser(UserSignupRequest request) {
         validateUser(request.getUsername(), request.getEmail());
 
         String encryptedPassword = passwordEncoder.encode(request.getPassword());
@@ -45,7 +46,8 @@ public class UserService implements UserDetailsService {
                 .password(encryptedPassword) // 암호화된 비밀번호 저장
                 .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return UserResponse.from(savedUser);
     }
 
     // 로그인
@@ -62,9 +64,10 @@ public class UserService implements UserDetailsService {
     }
 
     // 이메일로 유저 찾기
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new GlobalException(GlobalErrorCode.NOT_FOUND_USER_EMAIL));
+        return UserResponse.from(user);
     }
 
     // 유저 검증

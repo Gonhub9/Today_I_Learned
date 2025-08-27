@@ -1,5 +1,6 @@
 package gon.til.domain.service;
 
+import gon.til.domain.dto.kanbancolumn.KanbanColumnResponse;
 import gon.til.domain.dto.kanbancolumn.KanbanColumnCreateRequest;
 import gon.til.domain.dto.kanbancolumn.KanbanColumnUpdateRequest;
 import gon.til.domain.entity.Board;
@@ -38,7 +39,8 @@ public class KanbanColumnService {
      * @param request   새로 생성할 컬럼의 이름
      * @return 생성된 컬럼 엔티티
      */
-    public KanbanColumn createColumn(Long boardId, Long userId, KanbanColumnCreateRequest request) {
+    @Transactional
+    public KanbanColumnResponse createColumn(Long boardId, Long userId, KanbanColumnCreateRequest request) {
         // 1. ID를 사용하여 보드 엔티티를 조회합니다. 보드가 없으면 예외를 발생시킵니다.
         Board board = getBoardById(boardId);
 
@@ -48,7 +50,8 @@ public class KanbanColumnService {
         validateDuplicateColumnTitle(board.getId(), request.getTitle());
 
         // 5. 생성된 컬럼을 데이터베이스에 저장하고 반환합니다.
-        return createAndSaveColumn(board, request.getTitle());
+        KanbanColumn savedColumn = createAndSaveColumn(board, request.getTitle());
+        return KanbanColumnResponse.from(savedColumn);
     }
 
     /**
@@ -58,13 +61,15 @@ public class KanbanColumnService {
      * @param userId  요청을 보낸 사용자의 ID (권한 확인용)
      * @return 위치 순으로 정렬된 컬럼 리스트
      */
-    public List<KanbanColumn> getColumnsByBoard(Long boardId, Long userId) {
+    public List<KanbanColumnResponse> getColumnsByBoard(Long boardId, Long userId) {
         // 1. ID를 사용하여 보드 엔티티를 조회하고, 사용자의 보드 소유 권한을 확인합니다.
         Board board = getBoardById(boardId);
         validateBoardOwnership(board, userId);
 
         // 2. 해당 보드에 속한 모든 컬럼을 position 순으로 정렬하여 데이터베이스에서 조회 후 반환합니다.
-        return kanbanColumnRepository.findByBoardIdOrderByPosition(boardId);
+        return kanbanColumnRepository.findByBoardIdOrderByPosition(boardId).stream()
+            .map(KanbanColumnResponse::from)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -75,7 +80,8 @@ public class KanbanColumnService {
      * @param request 새로운 컬럼 제목
      * @return 제목이 수정된 컬럼 엔티티
      */
-    public KanbanColumn updateColumnTitle(Long columnId, Long userId, KanbanColumnUpdateRequest request) {
+    @Transactional
+    public KanbanColumnResponse updateColumnTitle(Long columnId, Long userId, KanbanColumnUpdateRequest request) {
         // 1. ID를 사용하여 컬럼 엔티티를 조회합니다.
         KanbanColumn column = getColumnById(columnId);
 
@@ -87,7 +93,7 @@ public class KanbanColumnService {
 
         // 4. 컬럼의 제목을 새로운 제목으로 업데이트하고, 변경된 내용을 반환합니다.
         column.updateColumn(request.getTitle());
-        return column;
+        return KanbanColumnResponse.from(column);
     }
 
     /**
@@ -99,7 +105,8 @@ public class KanbanColumnService {
      * @param columnIds 새로운 순서대로 정렬된 컬럼 ID 목록
      * @return 위치가 업데이트된 컬럼 목록
      */
-    public List<KanbanColumn> updateColumnPositions(Long boardId, Long userId, List<Long> columnIds) {
+    @Transactional
+    public List<KanbanColumnResponse> updateColumnPositions(Long boardId, Long userId, List<Long> columnIds) {
         // 1. 보드 존재 여부 및 사용자 권한을 확인합니다.
         Board board = getBoardById(boardId);
         validateBoardOwnership(board, userId);
@@ -135,7 +142,9 @@ public class KanbanColumnService {
 
         // 5. 변경된 컬럼 목록을 position 순으로 다시 정렬하여 반환합니다.
         columns.sort(Comparator.comparing(KanbanColumn::getPosition));
-        return columns;
+        return columns.stream()
+            .map(KanbanColumnResponse::from)
+            .collect(Collectors.toList());
     }
 
     /**

@@ -10,11 +10,13 @@ public class BoardResponse {
 
     private final Long id;
     private final String title;
+    private final Long projectId;
 
     public static BoardResponse from(Board board) {
         return new BoardResponse(
             board.getId(),
-            board.getTitle()
+            board.getTitle(),
+            board.getProject().getId()
         );
     }
 }

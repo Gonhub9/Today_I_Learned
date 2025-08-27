@@ -11,12 +11,14 @@ public class TagResponse {
     private final Long id;
     private final String name;
     private final String color;
+    private final Long projectId;
 
     public static TagResponse from(Tag tag) {
         return new TagResponse(
             tag.getId(),
             tag.getName(),
-            tag.getColor()
+            tag.getColor(),
+            tag.getProject().getId()
         );
     }
 }

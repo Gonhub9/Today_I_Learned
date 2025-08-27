@@ -27,4 +27,14 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     @Modifying
     @Query("UPDATE Card c SET c.position = c.position + 1 WHERE c.kanbanColumn.id = :columnId AND c.position >= :position")
     void incrementPositionsFrom(@Param("columnId") Long columnId, @Param("position") Integer position);
+
+    // 전체 카드 조회할 때 필요
+    @Query("SELECT DISTINCT c FROM Card c " +
+            "LEFT JOIN FETCH c.user " +
+            "LEFT JOIN FETCH c.kanbanColumn " +
+            "LEFT JOIN FETCH c.project " +
+            "LEFT JOIN FETCH c.cardTags ct " +
+            "WHERE c.project.id = :projectId")
+    List<Card> findAllByProjectIdWithDetails(@Param("projectId") Long projectId);
+
 }
