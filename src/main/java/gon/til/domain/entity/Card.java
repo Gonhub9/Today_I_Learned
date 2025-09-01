@@ -1,5 +1,7 @@
 package gon.til.domain.entity;
 
+import gon.til.global.exception.GlobalErrorCode;
+import gon.til.global.exception.GlobalException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -75,6 +77,14 @@ public class Card {
 
     // 태그 추가
     public void addTag(Tag tag) {
+        // 이미 존재하는지 확인
+        boolean alreadyExists = this.cardTags.stream()
+            .anyMatch(cardTag -> cardTag.getTag().equals(tag));
+
+        if (alreadyExists) {
+            throw new GlobalException(GlobalErrorCode.DUPLICATE_CARD_TAG);
+        }
+
         CardTag cardTag = new CardTag(this, tag);
         this.cardTags.add(cardTag);
     }

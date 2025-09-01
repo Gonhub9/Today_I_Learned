@@ -38,11 +38,14 @@ public class CardService {
 
         validateColumnOwnership(column, userId);
 
+        Project project = column.getBoard().getProject();
+
         Card card = Card.builder()
                 .kanbanColumn(column)
                 .user(user)
                 .title(request.getTitle())
                 .content(request.getContent())
+                .project(project)
                 .build();
 
         Card savedCard = cardRepository.save(card);

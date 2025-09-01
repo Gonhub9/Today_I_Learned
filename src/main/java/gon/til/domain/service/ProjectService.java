@@ -33,8 +33,14 @@ public class ProjectService {
         // 2. 불필요한 User 조회 방지
         User user = userRepository.getReferenceById(userId);
 
-        // 3. 프로젝트 생성
-        Project project = new Project(request.getTitle(), request.getDescription(), request.getCategory(), user);
+        // 3. 프로젝트와 기본 보드, 컬럼 생성
+        Project project = Project.createWithDefaultBoard(
+            request.getTitle(),
+            request.getDescription(),
+            request.getCategory(),
+            user
+        );
+
         Project savedProject = projectRepository.save(project);
 
         return ProjectResponse.from(savedProject);

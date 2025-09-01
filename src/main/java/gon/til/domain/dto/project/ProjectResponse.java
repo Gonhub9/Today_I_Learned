@@ -12,13 +12,15 @@ public class ProjectResponse {
     private final String title;
     private final String description;
     private final String category;
+    private final Long mainBoardId;
 
     public static ProjectResponse from(Project project) {
         return new ProjectResponse(
             project.getId(),
             project.getTitle(),
             project.getDescription(),
-            project.getCategory()
+            project.getCategory(),
+            project.getBoard() != null ? project.getBoard().getId() : null
         );
     }
 }

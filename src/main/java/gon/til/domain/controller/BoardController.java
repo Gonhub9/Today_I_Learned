@@ -73,7 +73,7 @@ public class BoardController {
             @AuthenticationPrincipal User user,
             @PathVariable Long boardId) {
 
-        boardService.deleteBoard(user.getId(), boardId);
+        boardService.deleteBoard(boardId, user.getId());
 
         return ResponseEntity.noContent().build();
     }

@@ -59,6 +59,7 @@ public class Board {
     public Board(String title, Project project) {
         this.title = title;
         this.project = project;
+        this.columns = new ArrayList<>();
     }
 
     // 보드 수정

@@ -1,17 +1,28 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+#        dialect: org.hibernate.dialect.MySQL8Dialect
+#  datasource:
+#    url: jdbc:mysql://127.0.0.1:3306/TIL?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+#    username: TIL
+#    password: alskfl1234
+#    driverClassName: com.mysql.cj.jdbc.Driver
+
+  # H2 Database Configuration
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:til-db;DB_CLOSE_DELAY=-1
     driverClassName: org.h2.Driver
+    username: sa
+    password: 
   h2:
     console:
       enabled: true
+      path: /h2-console
 
 # JWT
 jwt:
